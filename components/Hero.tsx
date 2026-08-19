@@ -39,6 +39,10 @@ export default function Hero() {
     let ticking = false;
 
     const onWheel = (e: WheelEvent) => {
+      // The 3D bottle is intentionally hidden on small screens, so preserve
+      // natural scrolling instead of intercepting the gesture there.
+      if (window.innerWidth < 1024) return;
+
       const hero = heroRef.current;
       if (!hero) return;
 
@@ -91,13 +95,13 @@ export default function Hero() {
   return (
     <section
       ref={heroRef}
-      className="relative w-full min-h-[92vh] flex items-center justify-center overflow-hidden pt-16 md:pt-20"
+      className="relative w-full min-h-[92svh] md:min-h-[92vh] flex items-center justify-center overflow-hidden pt-16 md:pt-20"
     >
-      <div className="absolute inset-0 z-10 pointer-events-none">
+      <div className="absolute inset-0 z-10 hidden lg:block pointer-events-none">
         <HeroBottleScene onRegisterSetter={onRegisterSetter} />
       </div>
 
-      <div className="relative z-20 text-center px-4 md:px-margin-desktop mt-28 md:mt-0 pointer-events-none max-w-5xl mx-auto">
+      <div className="relative z-20 text-center px-4 md:px-margin-desktop mt-12 sm:mt-16 md:mt-0 pointer-events-none max-w-5xl mx-auto">
         <div className="inline-block px-3 py-1 mb-6 border border-outline-variant/40 bg-white/40 backdrop-blur-md rounded-sm font-jetbrains text-xs uppercase tracking-[0.25em] text-[#444748]">
           ARCHITECTURAL PERFUMERY // VOL. 01
         </div>

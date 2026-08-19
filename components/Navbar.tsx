@@ -21,7 +21,7 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 w-full z-50 transition-all duration-300 hidden md:flex justify-between items-center px-8 lg:px-margin-desktop py-4 mx-auto border-b ${
+        className={`fixed top-0 w-full z-50 transition-all duration-300 hidden lg:flex justify-between items-center px-8 lg:px-margin-desktop py-4 mx-auto border-b ${
           isScrolled
             ? "bg-[#FAF9F9]/90 backdrop-blur-2xl border-outline-variant/30 shadow-sm"
             : "bg-[#FAF9F9]/70 backdrop-blur-xl border-outline-variant/20"
@@ -65,7 +65,7 @@ export default function Navbar() {
       </header>
 
       <div
-        className={`md:hidden fixed top-0 w-full z-40 p-4 flex justify-between items-center border-b transition-all duration-200 ${
+        className={`lg:hidden fixed top-0 w-full z-40 p-4 flex justify-between items-center border-b transition-all duration-200 ${
           isScrolled
             ? "bg-[#FAF9F9]/95 backdrop-blur-2xl border-outline-variant/30 shadow-sm"
             : "bg-[#FAF9F9]/85 backdrop-blur-xl border-outline-variant/20"

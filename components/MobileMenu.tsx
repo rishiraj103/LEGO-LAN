@@ -50,7 +50,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   return (
     <>
       <div
-        className={`md:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity duration-300 ${
+        className={`lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity duration-300 ${
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
         onClick={onClose}
@@ -58,7 +58,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
       />
 
       <aside
-        className={`md:hidden fixed top-0 left-0 w-72 h-full bg-[#FAF9F9] border-r border-outline-variant/30 z-50 flex flex-col transform transition-transform duration-300 ease-out shadow-2xl ${
+        className={`lg:hidden fixed top-0 left-0 w-72 h-full bg-[#FAF9F9] border-r border-outline-variant/30 z-50 flex flex-col transform transition-transform duration-300 ease-out shadow-2xl ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Mobile Navigation Drawer"
