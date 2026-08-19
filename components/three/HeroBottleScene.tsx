@@ -138,11 +138,16 @@ export default function HeroBottleScene({ onRegisterSetter }: HeroBottleScenePro
       onRegisterSetter((p: number) => { scrollProgress = p; });
     }
 
-    // Camera FOV 58° at z=9.5 → visible world-width ≈ ±12 on 1366px desktop.
-    // "DON'T WEAR" right edge sits at ~world X 7-8, so RIGHT_X must exceed that
-    // plus the bottle's own half-width (~1.2) to be completely clear of the text.
-    const LEFT_X  = width > 768 ? -9.5 : -5.5;  // well outside left of heading
-    const RIGHT_X = width > 768 ? 11.0 :  5.5;  // fully past right of heading
+    // Keep the fully assembled bottle inside the camera frame while leaving the
+    // centre clear for the heading. The horizontal view size depends on the
+    // viewport aspect ratio, so derive the resting positions from the camera.
+    const halfViewWidth = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z * camera.aspect;
+    const bottleHalfWidth = 1.35;
+    const edgeGap = 0.35;
+    const desktopX = halfViewWidth - bottleHalfWidth - edgeGap;
+    const sideX = width > 768 ? Math.min(desktopX, 7.6) : 4.2;
+    const LEFT_X = -sideX;
+    const RIGHT_X = sideX;
 
     // Start bottle at the left position immediately
     assembly.position.x = LEFT_X;
