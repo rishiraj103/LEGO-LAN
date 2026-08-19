@@ -106,7 +106,7 @@ export default function Hero() {
           ARCHITECTURAL PERFUMERY // VOL. 01
         </div>
 
-        <h1 className="font-syne text-4xl sm:text-6xl md:text-7xl lg:text-[80px] font-extrabold text-primary uppercase tracking-tight leading-[1.05] mb-6">
+        <h1 className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-[80px] font-bold text-primary uppercase tracking-[-0.04em] leading-[1.02] mb-6">
           DON&apos;T WEAR A SIGNATURE.<br />
           <span className="text-primary">BUILD ONE.</span>
         </h1>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Syne, Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Syne, Hanken_Grotesk, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const syne = Syne({
@@ -20,6 +20,13 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
   variable: "--font-jetbrains",
+  display: "swap",
+});
+
+const displayFont = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
   display: "swap",
 });
 
@@ -51,7 +58,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${syne.variable} ${hankenGrotesk.variable} ${jetbrainsMono.variable} scroll-smooth`}
+      className={`${syne.variable} ${hankenGrotesk.variable} ${jetbrainsMono.variable} ${displayFont.variable} scroll-smooth`}
     >
       <head>
         <link

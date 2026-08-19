@@ -83,6 +83,7 @@ const config: Config = {
         "margin-desktop": "64px",
       },
       fontFamily: {
+        display: ["var(--font-display)", "sans-serif"],
         syne: ["var(--font-syne)", "sans-serif"],
         hanken: ["var(--font-hanken)", "sans-serif"],
         jetbrains: ["var(--font-jetbrains)", "monospace"],
