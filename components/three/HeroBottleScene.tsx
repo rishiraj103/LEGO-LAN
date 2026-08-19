@@ -1,0 +1,221 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import * as THREE from "three";
+
+export default function HeroBottleScene() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let width = container.clientWidth || window.innerWidth;
+    let height = container.clientHeight || window.innerHeight;
+
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(58, width / height, 0.1, 100);
+    camera.position.set(0, 0.5, 9.5);
+
+    const renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true,
+      powerPreference: "high-performance",
+      precision: "mediump",
+    });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    container.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.1);
+    scene.add(ambientLight);
+
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.4);
+    dirLight1.position.set(8, 12, 10);
+    scene.add(dirLight1);
+
+    const dirLight2 = new THREE.DirectionalLight(0xfff0e0, 0.6);
+    dirLight2.position.set(-8, 5, -5);
+    scene.add(dirLight2);
+
+    const rimLight = new THREE.PointLight(0xffd500, 1.0, 15);
+    rimLight.position.set(0, 4, -4);
+    scene.add(rimLight);
+
+    const glassMat = new THREE.MeshPhongMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.28,
+      shininess: 160,
+      specular: 0xffffff,
+      reflectivity: 0.9,
+    });
+
+    const goldMat = new THREE.MeshStandardMaterial({
+      color: 0xffcc00,
+      metalness: 0.85,
+      roughness: 0.25,
+    });
+
+    const redMat = new THREE.MeshStandardMaterial({
+      color: 0xff3b30,
+      metalness: 0.2,
+      roughness: 0.4,
+    });
+
+    const blackMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1c1c,
+      metalness: 0.6,
+      roughness: 0.35,
+    });
+
+    const bodyGeo = new THREE.BoxGeometry(2.4, 3.0, 1.3);
+    const coreGeo = new THREE.BoxGeometry(1.9, 2.2, 0.9);
+    const heartGeo = new THREE.BoxGeometry(2.4, 0.85, 1.3);
+    const capGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.7, 32);
+    const studGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.1, 20);
+
+    const baseMesh = new THREE.Mesh(bodyGeo, glassMat);
+    const coreMesh = new THREE.Mesh(coreGeo, redMat);
+    const heartMesh = new THREE.Mesh(heartGeo, goldMat);
+    const capMesh = new THREE.Mesh(capGeo, blackMat);
+
+    for (let i = 0; i < 2; i++) {
+      const stud1 = new THREE.Mesh(studGeo, glassMat);
+      stud1.position.set(i === 0 ? -0.55 : 0.55, 1.55, 0);
+      baseMesh.add(stud1);
+
+      const stud2 = new THREE.Mesh(studGeo, goldMat);
+      stud2.position.set(i === 0 ? -0.55 : 0.55, 0.48, 0);
+      heartMesh.add(stud2);
+    }
+
+    const assembly = new THREE.Group();
+    assembly.add(baseMesh, coreMesh, heartMesh, capMesh);
+    scene.add(assembly);
+
+    baseMesh.position.set(0, -9, -4);
+    coreMesh.position.set(4, 6, -3);
+    heartMesh.position.set(-4, 7, -2);
+    capMesh.position.set(0, 12, 4);
+
+    const targetBase = new THREE.Vector3(0, -0.6, 0);
+    const targetCore = new THREE.Vector3(0, -0.6, 0);
+    const targetHeart = new THREE.Vector3(0, 1.35, 0);
+    const targetCap = new THREE.Vector3(0, 2.15, 0);
+
+    const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
+    const handleMouseMove = (e: MouseEvent) => {
+      mouse.targetX = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouse.targetY = -(e.clientY / window.innerHeight - 0.5) * 2;
+    };
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+
+    let currentScrollY = 0;
+    const handleScroll = () => {
+      currentScrollY = window.scrollY;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    const handleResize = () => {
+      if (!container) return;
+      width = container.clientWidth || window.innerWidth;
+      height = container.clientHeight || window.innerHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    };
+    window.addEventListener("resize", handleResize, { passive: true });
+
+    let animationFrameId: number;
+    let time = 0;
+    let isVisible = true;
+    let isRunning = true;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        isVisible = entries[0].isIntersecting;
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(container);
+
+    function animate() {
+      if (!isRunning) return;
+
+      if (isVisible) {
+        time += 0.012;
+
+        const speed = 0.035;
+        baseMesh.position.lerp(targetBase, speed);
+        coreMesh.position.lerp(targetCore, speed);
+        heartMesh.position.lerp(targetHeart, speed);
+        capMesh.position.lerp(targetCap, speed);
+
+        mouse.x += (mouse.targetX - mouse.x) * 0.04;
+        mouse.y += (mouse.targetY - mouse.y) * 0.04;
+
+        assembly.rotation.y = Math.sin(time * 0.4) * 0.12 + mouse.x * 0.22;
+        assembly.rotation.x = Math.cos(time * 0.3) * 0.04 - mouse.y * 0.12;
+        assembly.position.y = Math.sin(time * 0.8) * 0.12;
+
+        if (currentScrollY > 60) {
+          const factor = Math.min((currentScrollY - 60) * 0.008, 2.5);
+          heartMesh.position.y = targetHeart.y + factor * 0.35;
+          capMesh.position.y = targetCap.y + factor * 0.7;
+          assembly.position.x = THREE.MathUtils.lerp(
+            assembly.position.x,
+            width > 768 ? 2.8 : 0,
+            0.04
+          );
+        } else {
+          assembly.position.x = THREE.MathUtils.lerp(assembly.position.x, 0, 0.04);
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    return () => {
+      isRunning = false;
+      cancelAnimationFrame(animationFrameId);
+      observer.disconnect();
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
+
+      if (container.contains(renderer.domElement)) {
+        container.removeChild(renderer.domElement);
+      }
+
+      bodyGeo.dispose();
+      coreGeo.dispose();
+      heartGeo.dispose();
+      capGeo.dispose();
+      studGeo.dispose();
+
+      glassMat.dispose();
+      goldMat.dispose();
+      redMat.dispose();
+      blackMat.dispose();
+
+      renderer.dispose();
+    };
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="w-full h-full min-h-[400px] md:min-h-[550px] relative pointer-events-none transform-gpu"
+      style={{ willChange: "transform" }}
+      aria-label="3D Interactive Assembling LEGO ÉLAN Fragrance Bottle"
+    />
+  );
+}
