@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { ArrowRight, ChevronDown } from "lucide-react";
+import { useEffect, useRef, useCallback } from "react";
 
 const HeroBottleScene = dynamic(
   () => import("./three/HeroBottleScene"),
@@ -16,6 +17,11 @@ const HeroBottleScene = dynamic(
 );
 
 export default function Hero() {
+  // 0 = bottle at left, 1 = bottle at right (resting, page scrolls freely)
+  const bottleProgressRef = useRef(0);
+  const setBottleProgressRef = useRef<((p: number) => void) | null>(null);
+  const heroRef = useRef<HTMLElement | null>(null);
+
   const scrollToBuilder = () => {
     const builderSection = document.getElementById("builder");
     if (builderSection) {
@@ -23,10 +29,72 @@ export default function Hero() {
     }
   };
 
+  const onRegisterSetter = useCallback((fn: (p: number) => void) => {
+    setBottleProgressRef.current = fn;
+  }, []);
+
+  useEffect(() => {
+    // How much each wheel tick advances the progress (tune this for feel)
+    const SENSITIVITY = 0.0012;
+    let ticking = false;
+
+    const onWheel = (e: WheelEvent) => {
+      const hero = heroRef.current;
+      if (!hero) return;
+
+      // Don't interfere if hero is above the fold
+      const rect = hero.getBoundingClientRect();
+      if (rect.bottom < 0) return;
+
+      const progress = bottleProgressRef.current;
+      const goingDown = e.deltaY > 0;
+      const goingUp   = e.deltaY < 0;
+
+      // Scrolling DOWN: hijack only while bottle hasn't reached right yet
+      if (goingDown && progress < 1.0) {
+        e.preventDefault();
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(() => {
+            const next = Math.min(1.0, bottleProgressRef.current + e.deltaY * SENSITIVITY);
+            bottleProgressRef.current = next;
+            setBottleProgressRef.current?.(next);
+            ticking = false;
+          });
+        }
+        return;
+      }
+
+      // Scrolling UP: hijack only if page is at the very top and bottle hasn't returned left
+      if (goingUp && window.scrollY === 0 && progress > 0) {
+        e.preventDefault();
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(() => {
+            // deltaY is negative when scrolling up, so this decreases progress
+            const next = Math.max(0, bottleProgressRef.current + e.deltaY * SENSITIVITY);
+            bottleProgressRef.current = next;
+            setBottleProgressRef.current?.(next);
+            ticking = false;
+          });
+        }
+        return;
+      }
+
+      // All other cases: let the page scroll normally
+    };
+
+    window.addEventListener("wheel", onWheel, { passive: false });
+    return () => window.removeEventListener("wheel", onWheel);
+  }, []);
+
   return (
-    <section className="relative w-full min-h-[92vh] flex items-center justify-center overflow-hidden pt-16 md:pt-20">
-      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-        <HeroBottleScene />
+    <section
+      ref={heroRef}
+      className="relative w-full min-h-[92vh] flex items-center justify-center overflow-hidden pt-16 md:pt-20"
+    >
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        <HeroBottleScene onRegisterSetter={onRegisterSetter} />
       </div>
 
       <div className="relative z-20 text-center px-4 md:px-margin-desktop mt-28 md:mt-0 pointer-events-none max-w-5xl mx-auto">

@@ -3,7 +3,11 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-export default function HeroBottleScene() {
+interface HeroBottleSceneProps {
+  onRegisterSetter?: (fn: (progress: number) => void) => void;
+}
+
+export default function HeroBottleScene({ onRegisterSetter }: HeroBottleSceneProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -114,12 +118,6 @@ export default function HeroBottleScene() {
     };
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
 
-    let currentScrollY = 0;
-    const handleScroll = () => {
-      currentScrollY = window.scrollY;
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
     const handleResize = () => {
       if (!container) return;
       width = container.clientWidth || window.innerWidth;
@@ -134,6 +132,21 @@ export default function HeroBottleScene() {
     let time = 0;
     let isVisible = true;
     let isRunning = true;
+
+    let scrollProgress = 0;
+    if (onRegisterSetter) {
+      onRegisterSetter((p: number) => { scrollProgress = p; });
+    }
+
+    // Camera FOV 58° at z=9.5 → visible world-width ≈ ±12 on 1366px desktop.
+    // "DON'T WEAR" right edge sits at ~world X 7-8, so RIGHT_X must exceed that
+    // plus the bottle's own half-width (~1.2) to be completely clear of the text.
+    const LEFT_X  = width > 768 ? -9.5 : -5.5;  // well outside left of heading
+    const RIGHT_X = width > 768 ? 11.0 :  5.5;  // fully past right of heading
+
+    // Start bottle at the left position immediately
+    assembly.position.x = LEFT_X;
+
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -160,20 +173,25 @@ export default function HeroBottleScene() {
 
         assembly.rotation.y = Math.sin(time * 0.4) * 0.12 + mouse.x * 0.22;
         assembly.rotation.x = Math.cos(time * 0.3) * 0.04 - mouse.y * 0.12;
-        assembly.position.y = Math.sin(time * 0.8) * 0.12;
 
-        if (currentScrollY > 60) {
-          const factor = Math.min((currentScrollY - 60) * 0.008, 2.5);
-          heartMesh.position.y = targetHeart.y + factor * 0.35;
-          capMesh.position.y = targetCap.y + factor * 0.7;
-          assembly.position.x = THREE.MathUtils.lerp(
-            assembly.position.x,
-            width > 768 ? 2.8 : 0,
-            0.04
-          );
-        } else {
-          assembly.position.x = THREE.MathUtils.lerp(assembly.position.x, 0, 0.04);
-        }
+        // scrollProgress 0→1: bottle travels LEFT_X → RIGHT_X (smoothstep eased)
+        const t    = Math.max(0, Math.min(1, scrollProgress));
+        const ease = t * t * (3 - 2 * t); // smoothstep
+        const targetX = LEFT_X + (RIGHT_X - LEFT_X) * ease;
+
+        // Subtle vertical bob — Y stays centred throughout
+        const bob = Math.sin(time * 0.8) * 0.1;
+
+        assembly.position.x = THREE.MathUtils.lerp(
+          assembly.position.x,
+          targetX,          // no mouse parallax on X so it doesn't drift past edges
+          0.07
+        );
+        assembly.position.y = THREE.MathUtils.lerp(
+          assembly.position.y,
+          bob,
+          0.07
+        );
 
         renderer.render(scene, camera);
       }
@@ -188,7 +206,6 @@ export default function HeroBottleScene() {
       cancelAnimationFrame(animationFrameId);
       observer.disconnect();
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
 
       if (container.contains(renderer.domElement)) {
@@ -208,7 +225,7 @@ export default function HeroBottleScene() {
 
       renderer.dispose();
     };
-  }, []);
+  }, [onRegisterSetter]);
 
   return (
     <div
