@@ -102,8 +102,10 @@ export default function HeroBottleScene({ onRegisterSetter }: HeroBottleScenePro
     scene.add(assembly);
 
     baseMesh.position.set(0, -9, -4);
-    coreMesh.position.set(4, 6, -3);
-    heartMesh.position.set(-4, 7, -2);
+    // Start each piece above or below its final position, rather than sending
+    // pieces through the centre of the hero where they would cover the heading.
+    coreMesh.position.set(0, 6, -3);
+    heartMesh.position.set(0, 7, -2);
     capMesh.position.set(0, 12, 4);
 
     const targetBase = new THREE.Vector3(0, -0.6, 0);
